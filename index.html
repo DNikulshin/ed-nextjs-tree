@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивная структура проекта (ED + Next.js) с описанием</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e2f;
+            color: #e0e0e0;
+            margin: 20px;
+            line-height: 1.5;
+        }
+        .tree {
+            --spacing: 1.5rem;
+            --radius: 10px;
+        }
+        .tree ul {
+            padding-left: var(--spacing);
+            list-style: none;
+            position: relative;
+        }
+        .tree ul li {
+            position: relative;
+            padding-left: calc(2 * var(--spacing) - 10px);
+            margin: 4px 0;
+            border-left: 1px solid #4a4a6a;
+            cursor: default;
+        }
+        .tree ul li:last-child {
+            border-left-color: transparent;
+        }
+        .tree ul li::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -2px;
+            bottom: 50%;
+            width: 20px;
+            border-left: 1px solid #4a4a6a;
+            border-bottom: 1px solid #4a4a6a;
+            border-radius: 0 0 0 var(--radius);
+        }
+        .tree ul li:last-child::before {
+            border-bottom-left-radius: 0;
+        }
+        .tree ul li:last-child::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -2px;
+            bottom: 0;
+            width: 20px;
+            border-left: 1px solid #4a4a6a;
+        }
+        .tree .folder {
+            cursor: pointer;
+            user-select: none;
+            font-weight: bold;
+            color: #ffd966;
+        }
+        .tree .file {
+            color: #a5d6ff;
+        }
+        .tree .folder::before {
+            content: '📁 ';
+            font-weight: normal;
+        }
+        .tree .file::before {
+            content: '📄 ';
+            font-weight: normal;
+            color: #aaa;
+        }
+        .tree .folder.open::before {
+            content: '📂 ';
+        }
+        .tree li > ul {
+            display: block;
+        }
+        .tree li.folder-closed > ul {
+            display: none;
+        }
+        .tree li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .tree .root {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #fff;
+            border-left: none;
+            padding-left: 0;
+        }
+        .tree .root::before {
+            display: none;
+        }
+        .tree .root > .folder {
+            font-size: 1.4em;
+        }
+        .toggle {
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            font-weight: bold;
+            margin-right: 5px;
+            color: #bb86fc;
+        }
+        /* Стиль для подсказки (title) браузерный, но мы добавили описания в атрибуты */
+        .description {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2d2d44;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            border-left: 4px solid #bb86fc;
+        }
+        .description h3 {
+            margin-top: 0;
+            color: #ffd966;
+        }
+        hr {
+            border: 1px solid #4a4a6a;
+        }
+    </style>
+</head>
+<body>
+    <h1>Интерактивная структура проекта (ED + Next.js) с описанием</h1>
+    <p>🔍 <strong>Наведите курсор на любой элемент</strong>, чтобы увидеть его описание в архитектуре.</p>
+    <p>📁 Папки сворачиваются/разворачиваются кликом по ним или по иконке ▶/▼.</p>
+
+    <div class="tree" id="project-tree">
+        <ul>
+            <li class="root" title="Корневая директория исходного кода. Содержит все слои приложения.">
+                <span class="folder">src/</span>
+                <ul>
+                    <!-- app -->
+                    <li title="Слой маршрутизации Next.js (App Router). Здесь расположены страницы, layout'ы, глобальные провайдеры. Не содержит бизнес-логики.">
+                        <span class="folder">app/</span>
+                        <ul>
+                            <li title="Корневой layout, оборачивающий все страницы. Здесь подключаются глобальные стили, провайдеры (тема, стейт)."><span class="file">layout.tsx</span></li>
+                            <li title="Главная страница приложения (маршрут /). Обычно собирает фичи для отображения."><span class="file">page.tsx</span></li>
+                            <li title="Группа маршрутов /dashboard. Содержит страницы для раздела 'Дашборд'.">
+                                <span class="folder">dashboard/</span>
+                                <ul>
+                                    <li title="Страница /dashboard/page.tsx. Компонует фичи, относящиеся к дашборду."><span class="file">page.tsx</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <!-- features -->
+                    <li title="Основной слой приложения. Содержит независимые функциональные модули (фичи). Каждая фича реализует конкретную возможность (аутентификация, список задач).">
+                        <span class="folder">features/</span>
+                        <ul>
+                            <li title="Фича «Аутентификация». Отвечает за вход, регистрацию, управление сессией.">
+                                <span class="folder">auth/</span>
+                                <ul>
+                                    <li title="Public API фичи. Реэкспортирует только те компоненты/хуки, которые разрешено использовать вне фичи."><span class="file">index.ts</span></li>
+                                    <li title="Приватные функции для работы с API (например, запросы на бэкенд). Не предназначены для импорта из других фич."><span class="file">_api.ts</span></li>
+                                    <li title="UI-компоненты, специфичные для фичи auth (формы входа, регистрации).">
+                                        <span class="folder">ui/</span>
+                                        <ul>
+                                            <li title="Форма входа (клиентский компонент). Содержит поля email/пароль и отправляет данные."><span class="file">login-form.tsx</span></li>
+                                            <li title="Форма регистрации (клиентский компонент)."><span class="file">signup-form.tsx</span></li>
+                                        </ul>
+                                    </li>
+                                    <li title="Логика работы с данными фичи. Здесь хранятся хуки, стор (Zustand/Redux), селекторы.">
+                                        <span class="folder">model/</span>
+                                        <ul>
+                                            <li title="Хук для доступа к данным сессии (клиентский). Может использоваться в компонентах."><span class="file">use-session.ts</span></li>
+                                            <li title="Стор для управления состоянием аутентификации (например, Zustand)."><span class="file">auth-store.ts</span></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li title="Фича «Список задач». Управляет отображением, созданием, редактированием задач.">
+                                <span class="folder">task-list/</span>
+                                <ul>
+                                    <li title="Public API фичи."><span class="file">index.ts</span></li>
+                                    <li title="Приватные запросы к API для работы с задачами."><span class="file">_api.ts</span></li>
+                                    <li title="UI-компоненты фичи.">
+                                        <span class="folder">ui/</span>
+                                        <ul>
+                                            <li title="Основная страница со списком задач (может быть серверным компонентом)."><span class="file">task-list-page.tsx</span></li>
+                                            <li title="Карточка задачи (клиентский или серверный компонент)."><span class="file">task-card.tsx</span></li>
+                                        </ul>
+                                    </li>
+                                    <li title="Логика работы с данными задач.">
+                                        <span class="folder">model/</span>
+                                        <ul>
+                                            <li title="Хук для получения и управления списком задач."><span class="file">use-task-list.ts</span></li>
+                                        </ul>
+                                    </li>
+                                    <li title="Утилиты, специфичные для фичи (например, фильтрация задач).">
+                                        <span class="folder">lib/</span>
+                                        <ul>
+                                            <li title="Чистая функция для фильтрации задач."><span class="file">filter.ts</span></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <!-- services -->
+                    <li title="Слой переиспользуемых бизнес-сервисов. Помогают фичам выполнять свою работу, но сами не реализуют функциональность напрямую.">
+                        <span class="folder">services/</span>
+                        <ul>
+                            <li title="Сервис управления сессией. Хранит данные о текущем пользователе, предоставляет методы для входа/выхода.">
+                                <span class="folder">session/</span>
+                                <ul>
+                                    <li title="Public API сервиса."><span class="file">index.ts</span></li>
+                                    <li title="Приватная реализация менеджера сессии (не для внешнего использования)."><span class="file">_session-manager.ts</span></li>
+                                    <li title="Типы, специфичные для сессии (например, Session, User)."><span class="file">_types.ts</span></li>
+                                </ul>
+                            </li>
+                            <li title="Сервис уведомлений. Позволяет показывать всплывающие сообщения (тосты) в любом месте приложения.">
+                                <span class="folder">notification/</span>
+                                <ul>
+                                    <li title="Public API сервиса."><span class="file">index.ts</span></li>
+                                    <li title="Провайдер уведомлений (оборачивает приложение)."><span class="file">notification-provider.tsx</span></li>
+                                    <li title="Хук для вызова уведомлений (useNotification)."><span class="file">use-notification.ts</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <!-- shared -->
+                    <li title="Ядро приложения. Содержит код, используемый во всех слоях: UI-кит, утилиты, типы, конфигурацию. Важно: shared не должен импортировать другие слои.">
+                        <span class="folder">shared/</span>
+                        <ul>
+                            <li title="UI-кит — переиспользуемые компоненты интерфейса (кнопки, инпуты, модалки).">
+                                <span class="folder">ui/</span>
+                                <ul>
+                                    <li title="Базовая кнопка (может быть серверным или клиентским компонентом)."><span class="file">button.tsx</span></li>
+                                    <li title="Поле ввода."><span class="file">input.tsx</span></li>
+                                </ul>
+                            </li>
+                            <li title="Утилиты и хелперы общего назначения (работа с датами, логирование, форматирование).">
+                                <span class="folder">lib/</span>
+                                <ul>
+                                    <li title="Функции для форматирования и работы с датами."><span class="file">date.ts</span></li>
+                                    <li title="Настройка логирования (например, для отладки)."><span class="file">logger.ts</span></li>
+                                </ul>
+                            </li>
+                            <li title="Всё, что связано с внешним API: HTTP-клиент, типы ответов, сгенерированные схемы.">
+                                <span class="folder">api/</span>
+                                <ul>
+                                    <li title="Настроенный экземпляр axios/fetch для запросов к бэкенду."><span class="file">http-client.ts</span></li>
+                                    <li title="Сгенерированные типы (например, из OpenAPI схемы)."><span class="file">generated-types.ts</span></li>
+                                </ul>
+                            </li>
+                            <li title="Глобальная конфигурация приложения: константы роутов, переменные окружения, настройки.">
+                                <span class="folder">config/</span>
+                                <ul>
+                                    <li title="Константы с путями маршрутизации (например, ROUTES.HOME, ROUTES.DASHBOARD)."><span class="file">routes.ts</span></li>
+                                    <li title="Доступ к переменным окружения (process.env) с типизацией."><span class="file">env.ts</span></li>
+                                </ul>
+                            </li>
+                            <li title="Бизнес-домен: ключевые типы (User, Session) и чистые функции, реализующие бизнес-правила.">
+                                <span class="folder">domain/</span>
+                                <ul>
+                                    <li title="Тип пользователя (User)."><span class="file">user.ts</span></li>
+                                    <li title="Тип сессии (Session)."><span class="file">session.ts</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <hr>
+    <div class="description">
+        <h3>📌 Об архитектуре (Evolutionary Design + Next.js)</h3>
+        <ul>
+            <li><strong>app</strong> — только маршрутизация и глобальные обёртки. Страницы компонуют фичи.</li>
+            <li><strong>features</strong> — независимые модули функциональности. Внутри могут быть свои ui/model/lib. Фичи не импортируют друг друга напрямую (кроме малой модификации).</li>
+            <li><strong>services</strong> — переиспользуемые бизнес-сервисы (сессия, уведомления). Не зависят от фич.</li>
+            <li><strong>shared</strong> — ядро: UI-кит, утилиты, типы, конфиг. Не зависит ни от чего.</li>
+        </ul>
+        <p>💡 Наводите на элементы для подробностей.</p>
+    </div>
+
+    <script>
+        (function() {
+            function initTree() {
+                const folders = document.querySelectorAll('.tree .folder');
+                folders.forEach(folder => {
+                    const li = folder.closest('li');
+                    if (!li || li.dataset.treeInitialized) return;
+
+                    // Создаём кнопку-переключатель
+                    const toggle = document.createElement('span');
+                    toggle.className = 'toggle';
+                    toggle.textContent = '▼';
+                    toggle.style.marginRight = '5px';
+
+                    folder.parentNode.insertBefore(toggle, folder);
+
+                    const toggleHandler = (e) => {
+                        e.stopPropagation();
+                        const ul = li.querySelector('ul');
+                        if (!ul) return;
+                        if (ul.style.display === 'none') {
+                            ul.style.display = '';
+                            toggle.textContent = '▼';
+                            li.classList.remove('folder-closed');
+                        } else {
+                            ul.style.display = 'none';
+                            toggle.textContent = '▶';
+                            li.classList.add('folder-closed');
+                        }
+                    };
+
+                    toggle.addEventListener('click', toggleHandler);
+                    folder.addEventListener('click', toggleHandler);
+
+                    li.dataset.treeInitialized = 'true';
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initTree);
+            } else {
+                initTree();
+            }
+        })();
+    </script>
+</body>
+</html>
